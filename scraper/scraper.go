@@ -1,7 +1,8 @@
 package scraper
 
-import "github.com/gocolly/colly"
+import _ "github.com/gocolly/colly"
+import "github.com/milktea02/go-scrape-ygo/product"
 
 type Scraper interface {
-	Scrape(cardName string) (htmlBody *colly.HTMLElement, err error)
+	Scrape(cardName string) (products []*product.Info, err error)
 }

@@ -9,4 +9,5 @@ type Info struct {
 type Variant struct {
 	Condition string
 	Price     float64
+	Quantity  int64
 }

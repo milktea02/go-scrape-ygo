@@ -13,9 +13,27 @@ import (
 type F2FScraper struct {
 }
 
-func (*F2FScraper) Scrape(cardName string) (htmlBody *colly.HTMLElement, err error) {
+func (f2fScraper *F2FScraper) Scrape(cardName string) (products []*product.Info, err error) {
 
-	log.Printf("Scraping F2F for card '%s'", cardName)
+	log.Printf("Beginning the scrape on F2F for card '%s'", cardName)
+
+	log.Printf("Getting the html body")
+	htmlBody, err := f2fScraper.getHTMLBody(cardName)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("Got the htmlBody: '%s'", htmlBody.Name)
+	log.Printf("processing the htmlBody")
+	products, err = f2fScraper.processBody(htmlBody)
+	if err != nil {
+		return nil, err
+	}
+
+	return products, nil
+}
+
+func (*F2FScraper) getHTMLBody(cardName string) (htmlBody *colly.HTMLElement, err error) {
+
 	c := colly.NewCollector(
 		colly.AllowedDomains("facetofacegames.com", "www.facetofacegames.com"),
 	)
@@ -29,21 +47,14 @@ func (*F2FScraper) Scrape(cardName string) (htmlBody *colly.HTMLElement, err err
 	}
 
 	return htmlBody, nil
-
 }
 
-func (*F2FScraper) ProcessBody(args []string) {
-	fmt.Printf("Args: '%+v'", args)
-	cardName := strings.Join(args, "+")
+func (*F2FScraper) processBody(htmlBody *colly.HTMLElement) (products []*product.Info, err error) {
 
-	fmt.Printf("Querying for '%s'\n", cardName)
+	products = []*product.Info{}
 
-	products := []*product.Info{}
-	c := colly.NewCollector(
-		colly.AllowedDomains("facetofacegames.com", "www.facetofacegames.com"),
-	)
-
-	c.OnHTML("table.products_table", func(e *colly.HTMLElement) {
+	htmlBody.ForEach("table.products_table", func(_ int, e *colly.HTMLElement) {
+		log.Printf("Found the table with class name products_table: '%s'", e.Name)
 		e.ForEach("td.meta", func(_ int, tdMeta *colly.HTMLElement) {
 			productName := tdMeta.ChildText("a.name")
 			productSet := tdMeta.ChildText("small.category")
@@ -56,9 +67,16 @@ func (*F2FScraper) ProcessBody(args []string) {
 				if err != nil {
 					log.Fatalf("Error wile parsing string to float: '%s'", variantPriceString)
 				}
+				variantQuantityString := strings.Trim(trVariantRow.ChildText("td:nth-child(3)"), "x ")
+				variantQuantity, err := strconv.ParseInt(variantQuantityString, 0, 64)
+				if err != nil {
+					log.Fatalf("Error wile parsing string to int: '%s'", variantQuantityString)
+				}
+
 				variants = append(variants, &product.Variant{
 					Condition: variantCondition,
 					Price:     variantPrice,
+					Quantity:  variantQuantity,
 				})
 			})
 			if len(variants) == 0 {
@@ -89,10 +107,5 @@ func (*F2FScraper) ProcessBody(args []string) {
 		return products[first].Variants[0].Price < products[second].Variants[0].Price
 	})
 
-	for _, product := range products {
-		fmt.Printf("%+v\n", product)
-		for _, variant := range product.Variants {
-			fmt.Printf("%+v\n", variant)
-		}
-	}
+	return products, nil
 }
