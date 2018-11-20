@@ -1,43 +1,54 @@
-package main
+package scraper
 
 import "github.com/gocolly/colly"
-import "log"
-import "fmt"
-import "strings"
-import "strconv"
-import "os"
-import "sort"
+import (
+	"fmt"
+	"github.com/milktea02/go-scrape-ygo/product"
+	"log"
+	"sort"
+	"strconv"
+	"strings"
+)
 
-type ProductInfo struct {
-	Name     string
-	Set      string
-	Variants []*VariantInfo
+type F2FScraper struct {
 }
 
-type VariantInfo struct {
-	Condition string
-	Price     float64
-}
+func (*F2FScraper) Scrape(cardName string) (htmlBody *colly.HTMLElement, err error) {
 
-func main() {
-
-	args := os.Args[1:]
-	fmt.Printf("Args: '%+v'", os.Args)
-	cardName := strings.Join(args, "+")
-
-	fmt.Printf("Querying for '%s'\n", cardName)
-
+	log.Printf("Scraping F2F for card '%s'", cardName)
 	c := colly.NewCollector(
 		colly.AllowedDomains("facetofacegames.com", "www.facetofacegames.com"),
 	)
 
-	products := []*ProductInfo{}
+	c.OnHTML("body", func(e *colly.HTMLElement) {
+		htmlBody = e
+	})
+	if err := c.Visit("http://www.facetofacegames.com/products/search?query=" + cardName); err != nil {
+		return nil, fmt.Errorf("Error while visiting facetoface - '%s'\n", err)
+
+	}
+
+	return htmlBody, nil
+
+}
+
+func (*F2FScraper) ProcessBody(args []string) {
+	fmt.Printf("Args: '%+v'", args)
+	cardName := strings.Join(args, "+")
+
+	fmt.Printf("Querying for '%s'\n", cardName)
+
+	products := []*product.Info{}
+	c := colly.NewCollector(
+		colly.AllowedDomains("facetofacegames.com", "www.facetofacegames.com"),
+	)
 
 	c.OnHTML("table.products_table", func(e *colly.HTMLElement) {
 		e.ForEach("td.meta", func(_ int, tdMeta *colly.HTMLElement) {
 			productName := tdMeta.ChildText("a.name")
 			productSet := tdMeta.ChildText("small.category")
-			variants := []*VariantInfo{}
+			variants := []*product.Variant{}
+
 			tdMeta.ForEach("tr.variantRow", func(_ int, trVariantRow *colly.HTMLElement) {
 				variantCondition := trVariantRow.ChildText("td.variantInfo")
 				variantPriceString := strings.Trim(trVariantRow.ChildText("td.price"), "CAD$ ")
@@ -45,7 +56,7 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error wile parsing string to float: '%s'", variantPriceString)
 				}
-				variants = append(variants, &VariantInfo{
+				variants = append(variants, &product.Variant{
 					Condition: variantCondition,
 					Price:     variantPrice,
 				})
@@ -58,7 +69,7 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error wile parsing string to float: '%s'", variantPriceString)
 				}
-				variants = append(variants, &VariantInfo{
+				variants = append(variants, &product.Variant{
 					Condition: variantCondition,
 					Price:     variantPrice,
 				})
@@ -66,7 +77,7 @@ func main() {
 			sort.Slice(variants, func(first, second int) bool {
 				return variants[first].Price < variants[second].Price
 			})
-			products = append(products, &ProductInfo{
+			products = append(products, &product.Info{
 				Name:     productName,
 				Set:      productSet,
 				Variants: variants,
@@ -74,11 +85,6 @@ func main() {
 
 		})
 	})
-	if err := c.Visit("http://www.facetofacegames.com/products/search?query=" + cardName); err != nil {
-		log.Fatal("Error while visiting facetoface ", err)
-
-	}
-
 	sort.Slice(products, func(first, second int) bool {
 		return products[first].Variants[0].Price < products[second].Variants[0].Price
 	})
