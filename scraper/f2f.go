@@ -65,12 +65,12 @@ func (*F2FScraper) processBody(htmlBody *colly.HTMLElement) (products []*product
 				variantPriceString := strings.Trim(trVariantRow.ChildText("td.price"), "CAD$ ")
 				variantPrice, err := strconv.ParseFloat(variantPriceString, 64)
 				if err != nil {
-					log.Fatalf("Error wile parsing string to float: '%s'", variantPriceString)
+					log.Fatalf("Error wile parsing string to float: '%s', - '%s'", variantPriceString, err)
 				}
 				variantQuantityString := strings.Trim(trVariantRow.ChildText("td:nth-child(3)"), "x ")
 				variantQuantity, err := strconv.ParseInt(variantQuantityString, 0, 64)
 				if err != nil {
-					log.Fatalf("Error wile parsing string to int: '%s'", variantQuantityString)
+					log.Fatalf("Error wile parsing string to int: '%s', - '%s'", variantQuantityString, err)
 				}
 
 				variants = append(variants, &product.Variant{
@@ -85,7 +85,7 @@ func (*F2FScraper) processBody(htmlBody *colly.HTMLElement) (products []*product
 				variantPriceString = strings.Trim(variantPriceString, "CAD$ ")
 				variantPrice, err := strconv.ParseFloat(variantPriceString, 64)
 				if err != nil {
-					log.Fatalf("Error wile parsing string to float: '%s'", variantPriceString)
+					log.Fatalf("Error wile parsing string to float: '%s', '%s'", variantPriceString, err)
 				}
 				variants = append(variants, &product.Variant{
 					Condition: variantCondition,
