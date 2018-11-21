@@ -1,7 +1,7 @@
 package main
 
 import _ "github.com/gocolly/colly"
-import _ "github.com/milktea02/go-scrape-ygo/scraper"
+import "github.com/milktea02/go-scrape-ygo/scraper"
 import "github.com/milktea02/go-scrape-ygo/product"
 import (
 	"fmt"
@@ -14,7 +14,15 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hi there, I love %s!", r.URL.Path[1:])
+	log.Printf("%+v", r.URL.Path[1:])
+	cardName := strings.Replace(r.URL.Path[1:], " ", "+", -1)
+	f2fScraper := &scraper.F2FScraper{}
+	cards, err := f2fScraper.Scrape(cardName)
+	if err != nil {
+		log.Printf("Error: '%s'", err)
+	}
+	fmt.Fprintf(w, "hi there, I love %s!\n", r.URL.Path[1:])
+	printCardInfoForWeb(w, cards)
 }
 
 func main() {
@@ -38,6 +46,16 @@ func main() {
 		}
 		printCardInfo(cards)
 	*/
+}
+
+func printCardInfoForWeb(w http.ResponseWriter, cards []*product.Info) {
+	for _, card := range cards {
+		fmt.Fprintf(w, "Card Name: %s \t Card Set: %s\n", card.Name, card.Set)
+		for _, variant := range card.Variants {
+			fmt.Fprintf(w, "%s \t %.2f \t %d\n", variant.Condition, variant.Price, variant.Quantity)
+		}
+	}
+
 }
 
 func printCardInfo(cards []*product.Info) {
