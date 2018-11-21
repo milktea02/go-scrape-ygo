@@ -1,26 +1,38 @@
 package main
 
 import _ "github.com/gocolly/colly"
-import "github.com/milktea02/go-scrape-ygo/scraper"
+import _ "github.com/milktea02/go-scrape-ygo/scraper"
 import "github.com/milktea02/go-scrape-ygo/product"
 import (
 	"fmt"
+	_ "io/ioutil"
 	"log"
-	"os"
+	"net/http"
+	_ "os"
 	"strings"
 	"unicode"
 )
 
-func main() {
-	args := os.Args[1:]
-	cardName := parseArgs(args)
-	f2fScraper := &scraper.F2FScraper{}
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "hi there, I love %s!", r.URL.Path[1:])
+}
 
-	cards, err := f2fScraper.Scrape(cardName)
-	if err != nil {
-		log.Printf("Error: '%s'", err)
-	}
-	printCardInfo(cards)
+func main() {
+
+	http.HandleFunc("/", handler)
+	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	/*
+		args := os.Args[1:]
+		cardName := parseArgs(args)
+		f2fScraper := &scraper.F2FScraper{}
+
+		cards, err := f2fScraper.Scrape(cardName)
+		if err != nil {
+			log.Printf("Error: '%s'", err)
+		}
+		printCardInfo(cards)
+	*/
 }
 
 func printCardInfo(cards []*product.Info) {
