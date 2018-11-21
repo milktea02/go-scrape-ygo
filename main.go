@@ -16,12 +16,15 @@ import (
 func handler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%+v", r.URL.Path[1:])
 	cardName := strings.Replace(r.URL.Path[1:], " ", "+", -1)
+	if cardName == "favicon.ico" {
+		return
+	}
 	f2fScraper := &scraper.F2FScraper{}
 	cards, err := f2fScraper.Scrape(cardName)
 	if err != nil {
 		log.Printf("Error: '%s'", err)
 	}
-	fmt.Fprintf(w, "hi there, I love %s!\n", r.URL.Path[1:])
+	fmt.Fprintf(w, "Search params: %s!\n", cardName)
 	printCardInfoForWeb(w, cards)
 }
 
