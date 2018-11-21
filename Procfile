@@ -1,1 +1,1 @@
-web: go-scrape-ygo deskbot 003
+web: go-scrape-ygo
