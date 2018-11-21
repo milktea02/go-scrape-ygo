@@ -13,7 +13,7 @@ import (
 
 func main() {
 	args := os.Args[1:]
-	cardName, _ := parseArgs(args)
+	cardName := parseArgs(args)
 	f2fScraper := &scraper.F2FScraper{}
 
 	cards, err := f2fScraper.Scrape(cardName)
