@@ -63,6 +63,7 @@ func (*F2FScraper) processBody(htmlBody *colly.HTMLElement) (products []*product
 			tdMeta.ForEach("tr.variantRow", func(_ int, trVariantRow *colly.HTMLElement) {
 				variantCondition := trVariantRow.ChildText("td.variantInfo")
 				variantPriceString := strings.Trim(trVariantRow.ChildText("td.price"), "CAD$ ")
+				variantPriceString = strings.Split(variantPriceString, " ")[0]
 				variantPrice, err := strconv.ParseFloat(variantPriceString, 64)
 				if err != nil {
 					log.Printf("Error wile parsing string to float: '%s', - '%s'", variantPriceString, err)
@@ -81,6 +82,7 @@ func (*F2FScraper) processBody(htmlBody *colly.HTMLElement) (products []*product
 					Quantity:  variantQuantity,
 				})
 			})
+			// This usually means theres none in stock so get the "speculated" pricing
 			if len(variants) == 0 {
 				variantCondition := tdMeta.ChildText("td.variantInfo")
 				variantPriceString := tdMeta.ChildText("table > tbody > tr > td:nth-child(2)")
