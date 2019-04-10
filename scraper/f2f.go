@@ -35,7 +35,7 @@ func (f2fScraper *F2FScraper) Scrape(cardName string) (products []*product.Info,
 func (*F2FScraper) getHTMLBody(cardName string) (htmlBody *colly.HTMLElement, err error) {
 
 	c := colly.NewCollector(
-		colly.AllowedDomains("facetofacegames.com", "www.facetofacegames.com"),
+		colly.AllowedDomains("facetofacegames.com", "www.facetofacegames.com", "www.facetofacegames.com:443"),
 	)
 
 	c.OnHTML("body", func(e *colly.HTMLElement) {
