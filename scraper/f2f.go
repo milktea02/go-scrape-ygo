@@ -52,9 +52,9 @@ func (*F2FScraper) getHTMLBody(cardName string) (htmlBody *colly.HTMLElement, er
 func (*F2FScraper) processBody(htmlBody *colly.HTMLElement) (products []*product.Info, err error) {
 
 	products = []*product.Info{}
-
-	htmlBody.ForEach("table.products_table", func(_ int, e *colly.HTMLElement) {
-		log.Printf("Found the table with class name products_table: '%s'", e.Name)
+	// why is it called invsisible-table? je ne sais pas.
+	htmlBody.ForEach("table.invisible-table", func(_ int, e *colly.HTMLElement) {
+		log.Printf("Found the table with class name invsible-table: '%s'", e.Name)
 		e.ForEach("td.meta", func(_ int, tdMeta *colly.HTMLElement) {
 			productName := tdMeta.ChildText("a.name")
 			productSet := tdMeta.ChildText("small.category")
